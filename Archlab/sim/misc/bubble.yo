@@ -1,0 +1,70 @@
+                            | # Written by Yuyang Zhou
+                            | # Mail: 2000013061@stu.pku.edu.cn
+                            | # Execution begins at address 0 
+0x000:                      | 	.pos 0 
+0x000: 30f40004000000000000 | 	irmovq stack, %rsp  	# Set up stack pointer  
+0x00a: 804800000000000000   | 	call main		# Execute main program
+0x013: 00                   | 	halt			# Terminate program 
+                            | 
+                            | # Sample array
+0x018:                      | .align 8
+0x018:                      | Array:
+0x018: ca0b000000000000     | 	.quad 0xbca
+0x020: ba0c000000000000     | 	.quad 0xcba
+0x028: cb0a000000000000     | 	.quad 0xacb
+0x030: ab0c000000000000     | 	.quad 0xcab
+0x038: bc0a000000000000     | 	.quad 0xabc
+0x040: ac0b000000000000     | 	.quad 0xbac
+                            | 
+0x048:                      | main:
+0x048: 30f71800000000000000 | 	irmovq Array,%rdi
+0x052: 30f60600000000000000 | 	irmovq $6,%rsi
+0x05c: 806600000000000000   |         call bubble_sort
+0x065: 90                   |         ret
+                            | 
+                            | # %r8 save the pointer of begining of array
+                            | # %r9 save the last
+                            | # %r10 save the i
+                            | # %r11 save the i+1
+0x066:                      | bubble_sort:
+0x066: 30fe0800000000000000 | 	irmovq $8,%r14
+0x070: 2078                 | 	rrmovq %rdi,%r8
+                            | 
+0x072: 2069                 | 	rrmovq %rsi,%r9
+0x074: 6099                 | 	addq %r9,%r9
+0x076: 6099                 | 	addq %r9,%r9
+0x078: 6099                 | 	addq %r9,%r9
+0x07a: 6089                 | 	addq %r8,%r9
+                            | 
+0x07c: 70d100000000000000   | 	jmp L_end1
+0x085:                      | L_begin0:
+0x085: 208a                 | 	rrmovq %r8,%r10
+0x087: 208b                 | 	rrmovq %r8,%r11
+0x089: 60eb                 | 	addq %r14,%r11
+0x08b:                      | L_begin1:
+0x08b: 500a0000000000000000 | 	mrmovq (%r10),%rax
+0x095: 503b0000000000000000 | 	mrmovq (%r11),%rbx
+0x09f: 6103                 | 	subq %rax,%rbx
+0x0a1: 75c000000000000000   | 	jge L_nswap
+0x0aa: 6003                 | 	addq %rax,%rbx
+0x0ac: 403a0000000000000000 | 	rmmovq %rbx,(%r10)
+0x0b6: 400b0000000000000000 | 	rmmovq %rax,(%r11)
+0x0c0:                      | L_nswap:
+0x0c0: 60ea                 | 	addq %r14,%r10
+0x0c2: 60eb                 | 	addq %r14,%r11
+0x0c4: 20a0                 | 	rrmovq %r10,%rax
+0x0c6: 6390                 | 	xorq %r9,%rax
+0x0c8: 748b00000000000000   | 	jne L_begin1
+0x0d1:                      | L_end1:
+0x0d1: 61e9                 | 	subq %r14,%r9
+0x0d3: 2090                 | 	rrmovq %r9,%rax
+0x0d5: 6380                 | 	xorq %r8,%rax
+0x0d7: 748500000000000000   | 	jne L_begin0
+0x0e0:                      | L_end0:
+0x0e0: 90                   | 	ret
+                            | 
+                            | 
+                            | # The stack starts here and grows to lower addresses
+0x400:                      | 	.pos 0x400		
+0x400:                      | stack:	
+                            | 

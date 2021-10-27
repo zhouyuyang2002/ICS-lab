@@ -1,0 +1,70 @@
+# Written by Yuyang Zhou
+# Mail: 2000013061@stu.pku.edu.cn
+# Execution begins at address 0 
+	.pos 0 
+	irmovq stack, %rsp  	# Set up stack pointer  
+	call main		# Execute main program
+	halt			# Terminate program 
+
+# Sample array
+.align 8
+Array:
+	.quad 0xbca
+	.quad 0xcba
+	.quad 0xacb
+	.quad 0xcab
+	.quad 0xabc
+	.quad 0xbac
+
+main:
+	irmovq Array,%rdi
+	irmovq $6,%rsi
+        call bubble_sort
+        ret
+
+# %r8 save the pointer of begining of array
+# %r9 save the last
+# %r10 save the i
+# %r11 save the i+1
+bubble_sort:
+	irmovq $8,%r14
+	rrmovq %rdi,%r8
+
+	rrmovq %rsi,%r9
+	addq %r9,%r9
+	addq %r9,%r9
+	addq %r9,%r9
+	addq %r8,%r9
+
+	jmp L_end1
+L_begin0:
+	rrmovq %r8,%r10
+	rrmovq %r8,%r11
+	addq %r14,%r11
+L_begin1:
+	mrmovq (%r10),%rax
+	mrmovq (%r11),%rbx
+	subq %rax,%rbx
+	jge L_nswap
+	addq %rax,%rbx
+	rmmovq %rbx,(%r10)
+	rmmovq %rax,(%r11)
+L_nswap:
+	addq %r14,%r10
+	addq %r14,%r11
+	rrmovq %r10,%rax
+	xorq %r9,%rax
+	jne L_begin1
+L_end1:
+	subq %r14,%r9
+	rrmovq %r9,%rax
+	xorq %r8,%rax
+	jne L_begin0
+L_end0:
+	ret
+
+
+# The stack starts here and grows to lower addresses
+	.pos 0x400		
+stack:	
+

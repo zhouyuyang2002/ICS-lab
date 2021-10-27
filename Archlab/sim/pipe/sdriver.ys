@@ -1,0 +1,230 @@
+#######################################################################
+# Test for copying block of size 4;
+#######################################################################
+	.pos 0
+main:	irmovq Stack, %rsp  	# Set up stack pointer
+
+	# Set up arguments for copy function and then invoke it
+	irmovq $4, %rdx		# src and dst have 4 elements
+	irmovq dest, %rsi	# dst array
+	irmovq src, %rdi	# src array
+	call ncopy		 
+	halt			# should halt with num nonzeros in %rax
+StartFun:
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Include your name and ID here.
+# Written by Yuyang Zhou
+# Mail: 2000013061@stu.pku.edu.cn
+#
+# Mov irmovq $1, %r10 outside the loop
+# Mov irmovq $8, %r10 outside the loop
+# use 4*1 unrolling to reduce the operations used in len--,src++,dst++
+# Rearrange mrmovq and rmmovq in order to reduce the load/use
+# CPI: 450 cycles/376 instructions = 1.20(n = 64)
+# CPE: 7.03(n = 64)
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+##################################################################
+# You can modify this portion
+	# Loop header
+	iaddq $-8,%rdx		
+	jl E_Loop_2		
+	
+Loop_2:
+	mrmovq (%rdi), %r8      # move src[0] to dst[0]
+	mrmovq 8(%rdi), %r9     # move src[1] to dst[1]
+	rmmovq %r8, (%rsi)
+	rmmovq %r9, 8(%rsi)
+	andq %r8, %r8           # if src[0] > 0 ++count
+	jle Npos_2_1
+	iaddq $1, %rax          
+Npos_2_1:
+	andq %r9, %r9           # if src[1] > 0 ++count
+	jle Npos_2_2
+	iaddq $1, %rax
+Npos_2_2:
+	mrmovq 16(%rdi), %r8    # move src[2] to dst[2]
+	mrmovq 24(%rdi), %r9    # move src[3] to dst[3]
+	rmmovq %r8, 16(%rsi)
+	rmmovq %r9, 24(%rsi)
+	andq %r8, %r8           # if src[2] > 0 ++count
+	jle Npos_2_3
+	iaddq $1, %rax 
+Npos_2_3:
+	andq %r9, %r9           # if src[3] > 0 ++count
+	jle Npos_2_4
+	iaddq $1, %rax 
+Npos_2_4:
+	mrmovq 32(%rdi), %r8    # move src[4] to dst[4]
+	mrmovq 40(%rdi), %r9    # move src[5] to dst[5]
+	rmmovq %r8, 32(%rsi)
+	rmmovq %r9, 40(%rsi)
+	andq %r8, %r8           # if src[4] > 0 ++count
+	jle Npos_2_5
+	iaddq $1, %rax 
+Npos_2_5:
+	andq %r9, %r9           # if src[5] > 0 ++count
+	jle Npos_2_6
+	iaddq $1, %rax 
+Npos_2_6:
+	mrmovq 48(%rdi), %r8    # move src[6] to dst[6]
+	mrmovq 56(%rdi), %r9    # move src[7] to dst[7]
+	rmmovq %r8, 48(%rsi)
+	rmmovq %r9, 56(%rsi)
+	andq %r8, %r8           # if src[6] > 0 ++count
+	jle Npos_2_7
+	iaddq $1, %rax 
+Npos_2_7:
+	andq %r9, %r9           # if src[7] > 0 ++count
+	jle Npos_2_8
+	iaddq $1, %rax 
+Npos_2_8:
+	iaddq $64, %rdi         # src += 4
+	iaddq $64, %rsi         # dst += 4
+	iaddq $-8, %rdx         # len -= 4
+	jge Loop_2              # if len < 0 break
+
+
+E_Loop_2:
+	iaddq $4, %rdx
+	jl LEN_L4
+	mrmovq (%rdi), %r8      # move src[0] to dst[0]
+	mrmovq 8(%rdi), %r9     # move src[1] to dst[1]
+	rmmovq %r8, (%rsi)
+	rmmovq %r9, 8(%rsi)
+	andq %r8, %r8           # if src[0] > 0 ++count
+	jle Npos_1_1
+	iaddq $1, %rax          
+Npos_1_1:
+	andq %r9, %r9           # if src[1] > 0 ++count
+	jle Npos_1_2
+	iaddq $1, %rax
+Npos_1_2:
+	mrmovq 16(%rdi), %r8    # move src[2] to dst[2]
+	mrmovq 24(%rdi), %r9    # move src[3] to dst[3]
+	rmmovq %r8, 16(%rsi)
+	rmmovq %r9, 24(%rsi)
+	andq %r8, %r8           # if src[2] > 0 ++count
+	jle Npos_1_3
+	iaddq $1, %rax 
+Npos_1_3:
+	andq %r9, %r9           # if src[3] > 0 ++count
+	jle Npos_1_4
+	iaddq $1, %rax 
+Npos_1_4:
+	iaddq $-1, %rdx
+	jg LEN_G5
+	mrmovq 32(%rdi), %r8
+	je LEN_5
+	jmp Done
+LEN_G5:
+	mrmovq 32(%rdi), %r8
+	mrmovq 40(%rdi), %r9
+	iaddq $-1, %rdx
+	je LEN_6
+LEN_7:
+	mrmovq 48(%rdi), %r10
+	rmmovq %r10, 48(%rsi)
+	andq %r10, %r10
+	jle LEN_6
+	iaddq $1, %rax
+LEN_6:
+	rmmovq %r9, 40(%rsi)
+	andq %r9, %r9
+	jle LEN_5
+	iaddq $1, %rax
+LEN_5:
+	rmmovq %r8, 32(%rsi)
+	andq %r8, %r8
+	jle Done
+	iaddq $1, %rax
+	jmp Done
+
+
+LEN_L4:
+	iaddq $3, %rdx
+	jg LEN_G1
+	mrmovq (%rdi), %r8
+	je LEN_1
+	jmp Done
+LEN_G1:
+	mrmovq (%rdi), %r8
+	mrmovq 8(%rdi), %r9
+	iaddq $-1, %rdx
+	je LEN_2
+LEN_3:
+	mrmovq 16(%rdi), %r10
+	rmmovq %r10, 16(%rsi)
+	andq %r10, %r10
+	jle LEN_2
+	iaddq $1, %rax
+LEN_2:
+	rmmovq %r9, 8(%rsi)
+	andq %r9, %r9
+	jle LEN_1
+	iaddq $1, %rax
+LEN_1:
+	rmmovq %r8, (%rsi)
+	andq %r8, %r8
+	jle Done
+	iaddq $1, %rax
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */
+EndFun:
+
+###############################
+# Source and destination blocks 
+###############################
+	.align 8
+src:
+	.quad -1
+	.quad 2
+	.quad -3
+	.quad 4
+	.quad 0xbcdefa # This shouldn't get moved
+
+	.align 16
+Predest:
+	.quad 0xbcdefa
+dest:
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
+Postdest:
+	.quad 0xdefabc
+
+.align 8
+# Run time stack
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+
+Stack:
