@@ -200,7 +200,8 @@ void Run_Cache(){
 	long long location;
 	int size;
 	while (fscanf(inf, "%s %llx,%d", type, &location, &size) != EOF){
-		printf("%s %llx,%d\n",type,location,size);
+		if (Verbose_tag == 1)
+			printf("%s %llx,%d\n",type,location,size);
 		switch (type[0]){
 			case 'I':
 				break;
